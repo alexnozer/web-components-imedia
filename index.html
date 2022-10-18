@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Web Components</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="stylesheet" href="shower/themes/ribbon/styles/styles.css">
+    <script type="module" src="./components/code-block/code-block.js"></script>
+    <script>
+        class QuantityInput extends HTMLElement {
+            template() { 
+                return `
+                    <slot name="label"></slot>
+                    <button type="button" class="minus" aria-label="decrease">-</button>
+                    <output class="output">0</output>
+                    <button type="button" class="plus" aria-label="increase">+</button>
+                `;
+            }
+
+            styles() { 
+                return `
+                    :host {
+                        max-width: 150px;
+                        display: flex;
+                        flex-wrap: wrap;
+                    }
+
+                    ::slotted(p.styled) {
+                        width: 100%;
+                        margin: 0 0 8px !important;
+                        font-size: 22px;
+                        font-style: italic;
+                        text-align: center;
+                    }
+
+                    .plus,
+                    .output,
+                    .minus {
+                        width: 50px;
+                    }
+
+                    .output {
+                        border-top: 1px solid black;
+                        border-bottom: 1px solid black;
+                        text-align: center;
+                    }
+
+                    .plus,
+                    .minus {
+                        background-color: black;
+                        border: none;
+                        font: inherit;
+                        color: white;
+                    }
+
+                    .plus:disabled,
+                    .minus:disabled {
+                        background-color: grey;
+                    }
+                `;
+            }
+
+            static observedAttributes = ['value'];
+
+            constructor() {
+                super();
+
+                const shadow = this.attachShadow({ mode: 'open' });
+
+                shadow.innerHTML = `
+                    <style>${this.styles()}</style>
+                    ${this.template()}
+                `;
+
+                this.plus = shadow.querySelector('.plus');
+                this.output = shadow.querySelector('.output');
+                this.minus = shadow.querySelector('.minus');
+            }
+
+            connectedCallback() {
+                const valueAttribute = this.getAttribute('value');
+                this.value = valueAttribute !== '' ? Number(valueAttribute) : 0;
+                this.plus.addEventListener('click', this._increase.bind(this));
+                this.minus.addEventListener('click', this._decrease.bind(this));
+            }
+
+            attributeChangedCallback(name, oldValue, newValue) {
+                switch (name) {
+                    case 'value':
+                        this.value = newValue;
+                        this.dispatchEvent(new CustomEvent('quantity:change', { bubbles: true }));
+                        break;
+                }
+            }
+
+            get value() {
+                return Number(this.output.value);
+            }
+
+            set value(newValue) {
+                const value = Number(newValue);
+            
+                this.output.value = value >= 0 ? value : 0;
+                this.minus.disabled = value === 0;
+                
+            }
+
+            _decrease() {
+                this.value -= 1;
+                this.dispatchEvent(new CustomEvent('quantity:decrease', { bubbles: true }));
+            }
+
+            _increase() {
+                this.value += 1;
+                this.dispatchEvent(new CustomEvent('quantity:increase', { bubbles: true }));
+            }
+        }
+
+        customElements.define('quantity-input', QuantityInput);
+    </script>
+    
+    <style>
+        .shower {
+            --slide-ratio: calc(16 / 9);
+        }
+
+        .visually-hidden {
+            position: absolute !important;
+            overflow: hidden !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            margin: -1px !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+        }
+
+        .slide code-block {
+            font-family: 'PT Mono', monospace;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="shower list">
+
+    <header class="caption">
+        <h1>Web Components</h1>
+        <p>Назаренко Алексей, SpurIT, 2022</p>
+    </header>
+
+    <section class="slide clear" id="intro">
+        <style>
+            #intro code {
+                font-size: 54px;
+                opacity: 0.5;
+            }
+        </style>
+        <h2 class="visually-hidden">Web Components</h2>
+        <p>
+            <code class="place" style="top: 8%; left: 12%;">&lt;html&gt;</code>
+            <code class="place" style="top: 8%; left: 45%;">&lt;head&gt;</code>
+            <code class="place" style="top: 8%; left: 79%;">&lt;/head&gt;</code>
+            <code class="place" style="top: 27%; left: 25%;">&lt;body&gt;</code>
+            <code class="place" style="top: 27%; left: 62%;">&lt;h1&gt;</code>
+            <code class="place" style="top: 27%; left: 90%;">&lt;/h1&gt;</code>
+            <code class="place" style="top: 46%; left: 12%;">&lt;div&gt;</code>
+            <code class="place" style="top: 46%; left: 44%;">&lt;/div&gt;</code>
+            <code class="place" style="top: 46%; left: 79%;">&lt;/figure&gt;</code>
+            <code class="place" style="top: 65%; left: 25%;">&lt;img&gt;</code>
+            <code class="place" style="top: 65%; left: 62%;">&lt;/figure&gt;</code>
+            <code class="place" style="top: 65%; left: 90%;">&lt;p&gt;</code>
+            <code class="place" style="top: 85%; left: 12%;">&lt;/p&gt;</code>
+            <code class="place" style="top: 85%; left: 44%;">&lt;/body&gt;</code>
+            <code class="place" style="top: 85%; left: 79%;">&lt;/html&gt;</code>
+        </p>
+        <img class="cover w" src="pictures/bricks.jpg" alt="Белая кирпичная стена.">
+    </section>
+
+    <section class="slide">
+        <img src="./pictures/me.jpg" class="place left" height="100%" alt="">
+        <div style="margin-left: 50%;">
+            <h2>Обо мне</h2>
+            <p>Алексей Назаренко</p>
+            <p>Frontend developer в <img src="./pictures/spurit-logo.svg" height="32" style="vertical-align: middle;" alt="SpurIT"></p>
+            <p><b>alexnozer</b> почти везде</p>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Мы делаем интерфейсы</h2>
+    </section>
+
+    <section class="slide">
+        <h2>Разные интерфейсы</h2>
+        <ul>
+            <li>Информационные сайты, блоги</li>
+            <li><span lang="en">eCommerce</span></li>
+            <li>Дашборды, админки</li>
+            <li>Веб-приложения</li>
+            <li>Презентации</li>
+            <li>Игры</li>
+            <li>...</li>
+        </ul>
+    </section>
+
+    <section class="slide clear" style="background-color: #f4f2db;">
+        <h2 class="visually-hidden">Шаблон страницы</h2>
+        <figure>
+            <img src="pictures/template.png" class="cover" alt="">
+            <figcaption class="copyright">
+                <a href="https://atomicdesign.bradfrost.com/chapter-2/#templates" target="_blank" lang="en" hreflang="en"><cite>Atomic Design Methodology</cite></a> 
+            </figcaption>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">HTML</h2>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="shout" style="opacity: 0.5;">108</h2>
+        <p style="font-size: 18px; text-align: center;"><code>&lt;a&gt;</code> <code>&lt;abbr&gt;</code> <code>&lt;address&gt;</code> <code>&lt;area&gt;</code> <code>&lt;article&gt;</code> <code>&lt;aside&gt;</code> <code>&lt;audio&gt;</code> <code>&lt;b&gt;</code> <code>&lt;base&gt;</code><br> <code>&lt;bdi&gt;</code> <code>&lt;bdo&gt;</code> <code>&lt;blockquote&gt;</code> <code>&lt;body&gt;</code> <code>&lt;br&gt;</code> <code>&lt;button&gt;</code> <code>&lt;canvas&gt;</code> <code>&lt;caption&gt;</code> <code>&lt;cite&gt;</code> <code>&lt;code&gt;</code> <code>&lt;col&gt;</code> <code>&lt;colgroup&gt;</code> <code>&lt;data&gt;</code> <code>&lt;datalist&gt;</code> <code>&lt;dd&gt;</code> <code>&lt;del&gt;</code> <code>&lt;details&gt;</code> <code>&lt;dfn&gt;</code> <code>&lt;dialog&gt;</code> <code>&lt;div&gt;</code> <code>&lt;dl&gt;</code> <code>&lt;dt&gt;</code> <code>&lt;em&gt;</code> <code>&lt;embed&gt;</code> <code>&lt;fieldset&gt;</code> <code>&lt;figcaption&gt;</code> <code>&lt;figure&gt;</code> <code>&lt;footer&gt;</code> <code>&lt;form&gt;</code> <code>&lt;h1-h6&gt;</code> <code>&lt;head&gt;</code> <code>&lt;header&gt;</code> <code>&lt;hgroup&gt;</code> <code>&lt;hr&gt;</code> <code>&lt;html&gt;</code> <code>&lt;i&gt;</code> <code>&lt;iframe&gt;</code> <code>&lt;img&gt;</code> <code>&lt;input&gt;</code> <code>&lt;ins&gt;</code> <code>&lt;kbd&gt;</code> <code>&lt;label&gt;</code> <code>&lt;legend&gt;</code> <code>&lt;li&gt;</code> <code>&lt;link&gt;</code> <code>&lt;main&gt;</code> <code>&lt;map&gt;</code> <code>&lt;mark&gt;</code> <code>&lt;math&gt;</code> <code>&lt;menu&gt;</code> <code>&lt;meta&gt;</code> <code>&lt;meter&gt;</code> <code>&lt;nav&gt;</code> <code>&lt;noscript&gt;</code> <code>&lt;object&gt;</code> <code>&lt;ol&gt;</code> <code>&lt;optgroup&gt;</code> <code>&lt;option&gt;</code> <code>&lt;output&gt;</code> <code>&lt;p&gt;</code> <code>&lt;picture&gt;</code> <code>&lt;pre&gt;</code> <code>&lt;progress&gt;</code> <code>&lt;q&gt;</code> <code>&lt;rp&gt;</code> <code>&lt;rt&gt;</code> <code>&lt;ruby&gt;</code> <code>&lt;s&gt;</code> <code>&lt;samp&gt;</code> <code>&lt;script&gt;</code> <code>&lt;section&gt;</code> <code>&lt;select&gt;</code> <code>&lt;slot&gt;</code> <code>&lt;small&gt;</code> <code>&lt;source&gt;</code> <code>&lt;span&gt;</code> <code>&lt;strong&gt;</code> <code>&lt;style&gt;</code> <code>&lt;sub&gt;</code> <code>&lt;summary&gt;</code> <code>&lt;sup&gt;</code> <code>&lt;svg&gt;</code> <code>&lt;table&gt;</code> <code>&lt;tbody&gt;</code> <code>&lt;td&gt;</code> <code>&lt;template&gt;</code> <code>&lt;textarea&gt;</code> <code>&lt;tfoot&gt;</code> <code>&lt;th&gt;</code> <code>&lt;thead&gt;</code> <code>&lt;time&gt;</code> <code>&lt;title&gt;</code> <code>&lt;tr&gt;</code> <code>&lt;track&gt;</code> <code>&lt;u&gt;</code> <code>&lt;ul&gt;</code> <code>&lt;var&gt;</code> <code>&lt;video&gt;</code> <code>&lt;wbr&gt;</code></p>
+        <a href="https://html.spec.whatwg.org/multipage/indices.html#elements-3" class="copyright" target="_blank" lang="en" hreflang="en">Elements</a>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Не достаточно</h2>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Дашборды</h2>
+        <figure>
+            <img src="pictures/dashboard.jpg" class="cover w" alt="">
+            <figcaption class="copyright">
+                <a href="https://www.freepik.com/free-vector/evolution-graphic-dashboard-template_5500793.htm#page=2&query=admin%20dashboard&position=30&from_view=search&track=sph" target="_blank" lang="en" hreflang="en">Freepik</a> 
+            </figcaption>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Компоненты</h2>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Компонентный подход</h2>
+        <img src="pictures/vue-component.png" class="cover width" alt="Демонстрация разбиения страницы на различные компоненты в документации фрймворка Vue.">
+    </section>
+
+    <section class="slide">
+        <h2>Компонентный подход</h2>
+        <ul>
+            <li class="next">Делаем сами (HTML + CSS + JS)</li>
+            <li class="next">Подключаем библиотеки (Swiper, Select2, Popper, Lightbox, ...)</li>
+            <li class="next">Подключаем UI Kit (Bootstrap, UIkit, Material, ...)</li>
+            <li class="next">Используем фреймворки (React, Vue, Svelte, ...)</li>
+            <li class="next">Совмещаем</li>
+        </ul>
+        <p class="next">Лишние зависимости, нужно изучать API, подружить библиотеки...</p>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Создать теги?</h2>
+    </section>
+
+    <section class="slide">
+        <img src="./pictures/webcomponents.svg" class="place center" style="width: 80%;" alt="">
+    </section>
+
+    <section class="slide">
+        <h2>Web Components</h2>
+        <p class="next">Набор стандартов (спецификаций), которые позволяют разработчикам создавать свои независимые компоненты (теги) и наделять их логикой.</p>
+        <p class="next">Создание компонентов происходит при помощи JavaScript и встроенных браузерных API без подключения сторонних библиотек*.</p>
+        <p class="next">Созданные таким образом компоненты максимально нативны и ведут себя так же, как стандартные HTML-элементы.</p>
+    </section>
+
+    <section class="slide">
+        
+        <div class="columns two">
+            <div>
+                <h2>Спецификации</h2>
+                <ul>
+                    <li>HTML Templates</li>
+                    <li>Shadow DOM</li>
+                    <li>Custom Elements</li>
+                    <li><del>HTML Imports</del></li>
+                </ul>
+            </div>
+            <div class="next">
+                <h2>Дополнения</h2>
+                <ul>
+                    <li>ES6 Classes</li>
+                    <li>ES Modules</li>
+                    <li>Template literals</li>
+                    <li>и другие*</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2>HTML Templates</h2>
+        <p>Элемент <code>&lt;template&gt;</code> и создание переиспользуемой разметки.</p>
+        <code-block language="html">
+            &lt;template id="notification"&gt;
+                &lt;div class="notification"&gt;
+                    &lt;svg class="notification__icon"&gt;...&lt;/svg&gt;
+                    &lt;p class="notification__content"&gt;&lt;/p&gt;
+                &lt;/div&gt;
+            &lt;/template&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>HTML Templates</h2>
+        <figure>
+            <figcaption>
+                <p>Использование API <code>&lt;template&gt;</code></p>
+            </figcaption>
+            <code-block language="javascript">
+                const template = document.getElementById('notification');
+                const fragment = template.content.cloneNode(true);
+                fragment.querySelector('.notification__content').textContent = 'Hello world';
+                document.body.appendChild(fragment);
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Поддержка HTML Templates</h2>
+        <img src="pictures/caniuse.com_template.png" class="cover w" alt="">
+    </section>
+
+    <section class="slide" id="shadowRootDemo">
+        <h2>Shadow DOM</h2>
+        <figure>
+            <figcaption>
+                <p>"Теневое" DOM-дерево, изолированное от обычного DOM-дерева.</p>
+            </figcaption>
+            <code-block language="javascript">
+                const div = document.createElement('div');
+                div.attachShadow({ mode: 'open' });
+                div.shadowRoot.innerHTML = '&lt;h3 class="heading"&gt;Hello, World&lt;/h3&gt;';
+                document.body.appendChild(div);
+            </code-block>
+            <code-block language="html">
+                ▼ &lt;div&gt;
+                │ ▼ #shadow-root (open)
+                │ │   &lt;h3&gt;Hello, world&lt;/h3&gt;
+                │ &lt;/div&gt;
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide" id="shadowRootDemo">
+        <h2>Изоляция</h2>
+        <figure>
+            <code-block language="html">
+                ▼ &lt;div&gt;
+                │ ▼ #shadow-root (open)
+                │ │   &lt;h3 class="heading"&gt;Hello, world&lt;/h3&gt;
+                │ &lt;/div&gt;
+            </code-block>
+            <code-block language="css">
+                .heading { background-color: red; }
+            </code-block>
+            <code-block language="javascript">
+                try {
+                    document.querySelector('.heading').style.color = 'red';
+                } catch(error) {
+                    console.warn('Shadow DOM incapsulated');
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Shadow DOM</h2>
+        <figure>
+            <img src="pictures/audio-shadow-root.png" class="cover" alt="Демонстрация теневого дерева элемента audio в инспекторе браузера Chrome.">
+            <figcaption class="copyright">
+                <a href="https://interactive-examples.mdn.mozilla.net/pages/tabbed/audio.html" target="_blank" lang="en" hreflang="en">HTML Demo: &lt;audio&gt;</a>
+            </figcaption>
+        </figure>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Поддержка Shadow DOM</h2>
+        <img src="pictures/caniuse.com_shadowdomv1.png" class="cover w" alt="">
+    </section>
+
+    <section class="slide">
+        <h2>Custom Elements</h2>
+        <p>Создание пользовательских элементов на базе HTMLElement (автономные пользовательские элементы) или расширение браузерных элементов (встроенные пользовательские элементы).</p>
+        <p class="next">Пользовательский элемент это ES6 Class, наследуемый от HTMLElement, который регистрируется и закрепляется за именем тега.</p>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="visually-hidden">Поддержка Custom Elements</h2>
+        <img src="pictures/caniuse.com_custom-elementsv1.png" class="cover w" alt="">
+    </section>
+
+    <section class="slide">
+        <h2>Custom Elements</h2>
+        <figure>
+            <figcaption>
+                <p>Пример создания и использования Custom Elements:</p>
+            </figcaption>
+            <code-block language="javascript">
+                class MyElement extends HTMLElement { // Логика... }
+                customElements.define('my-element', MyElement);
+            </code-block>
+            <code-block language="html">
+                &lt;my-element&gt;&lt;/my-element&gt;
+                &lt;script&gt;
+                    const myElement = document.createElement('my-element');
+                &lt;/script&gt;
+            </code-block>
+        </figure>
+        <p>В имени компонента <strong>обязательно</strong> должен быть дефис <samp>-</samp>.</p>
+    </section>
+
+    <section class="slide">
+        <h2>Жизненный цикл</h2>
+        <figure>
+            <figcaption>
+                <p>Методы жизненного цикла <span lang="en">Custom Elements</span>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                class MyElement extends HTMLElement {
+                    static get observedAttributes() {} // Наблюдаемые атрибуты
+                    constructor() {...} // Элемент создан
+                    connectedCallback() {...} // Элемент вставлен в документ
+                    disconnectedCallback() {...} // Элемент удалён из документа
+                    attributeChangedCallback() {...} // Изменился наблюдаемый атрибут
+                    adoptedCallback() {...} // Элемент вставлен в другой документ
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Любые возможности класса</h2>
+        <figure>
+            <figcaption>
+                <p>Можно использовать любые возможности классов JS:</p>
+            </figcaption>
+            <code-block language="javascript">
+                class MySuperElement extends MyElement { // Наследование
+                    isOpen = true; // публичные поля
+                    static selector = 'my-element'; // статические поля
+                    #container = ...; // приватные поля
+                    onOpen() {} // публичные методы
+                    static getDescription() {} // статические методы
+                    #setupListeners() {} // приватные методы
+                    onClick() { super.onOpen(); } // вызов метода родителя
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Пример</h2>
+    </section>
+
+    <section class="slide">
+        <h2>Компонент</h2>
+        <p>
+            <quantity-input value="4"></quantity-input>
+        </p>
+        <code-block language="html">
+            &lt;quantity-input value="4"&gt;&lt;/quantity-input&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Создание</h2>
+        <figure>
+            <figcaption>
+                <p>Создаём класс и в конструкторе вызываем <code>super()</code>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                class QuantityInput extends HTMLElement {
+                    constructor() {
+                        super();
+                    }
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Шаблон</h2>
+        <figure>
+            <figcaption>
+                <p>При помощи DOM API создаём шаблон:</p>
+            </figcaption>
+            <code-block language="javascript">
+                connectedCallback() {
+                    const minus = document.createElement('button');
+                    minus.setAttribute('type', 'button');
+                    minus.setAttribute('aria-label', 'decrease');
+                    minus.classList.add('minus');
+                    const output = document.createElement('output');
+                    output.value = 0;
+                    output.classList.add('output');
+                    // ...
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Шаблон</h2>
+        <figure>
+            <figcaption>
+                <p>продолжаем...</p>
+            </figcaption>
+            <code-block language="javascript">
+                connectedCallback() {
+                    // ...
+                    const plus = document.createElement('button');
+                    plus.setAttribute('type', 'button');
+                    plus.setAttribute('aria-label', 'increase');
+                    plus.classList.add('plus');
+                    this.appendChild(minus);
+                    this.appendChild(output);
+                    this.appendChild(plus);
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Ну такое...</h2>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Шаблон</h2>
+        <figure>
+            <figcaption>
+                <p>Воспользуемся шаблонным литералом:</p>
+            </figcaption>
+            <code-block language="javascript">
+                connectedCallback() {
+                    this.innerHTML = `
+                        &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+                        &lt;output class="output"&gt;0&lt;/output&gt;
+                        &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+                    `;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Шаблон</h2>
+        <figure>
+            <figcaption>
+                <p>Вынесем разметку в отдельный метод:</p>
+            </figcaption>
+            <code-block language="javascript">
+                template() {
+                    return `
+                        &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+                        &lt;output class="output"&gt;
+                            ${Number(this.getAttribute('value'))}
+                        &lt;/output&gt;
+                        &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+                    `;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Стили</h2>
+        <figure>
+            <figcaption>
+                <p>Стили опишем в теге <code>&lt;style&gt;</code> внутри метода:</p>
+            </figcaption>
+            <code-block language="javascript">
+                styles() { 
+                    return `
+                        &lt;style&gt;
+                            .output {
+                                border-top: 1px solid black;
+                                border-bottom: 1px solid black;
+                                text-align: center;
+                            }
+                            // ...
+                        &lt;/style&gt;`;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Стили</h2>
+        <figure>
+            <figcaption>
+                <p>Или подключим сторонний файл:</p>
+            </figcaption>
+            <code-block language="javascript">
+                styles() { 
+                    return `&lt;style&gt;@import "style.css";&lt;/style&gt;`;
+                }
+            </code-block>
+            <span>Или используем <code>&lt;link&gt;</code>:</span>
+            <code-block language="javascript">
+                template() { 
+                    return `&lt;link rel="stylesheet" href="style.css"&lt;/link&gt;
+                    ...`;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Стили</h2>
+        <figure>
+            <figcaption>
+                <p>Сам компонент изнутри можем стилизовать через <code>:host</code>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                styles() { 
+                    return `
+                    &lt;style&gt;
+                        :host {
+                            max-width: 150px;
+                            display: flex;
+                        }
+                        // ...    
+                    &lt;/style&gt;`;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Создадим <span lang="en">Shadow DOM</span>, разместим стили и шаблон, получим элементы:</p>
+            </figcaption>
+            <code-block language="javascript">
+                connectedCallback() {
+                    this.#shadow = this.attachShadow({ mode: 'open' });
+                    this.#shadow.innerHTML = `
+                        ${this.styles()}
+                        ${this.template()}
+                    `;
+                    this.#plus = shadow.querySelector('.plus');
+                    this.#output = shadow.querySelector('.output');
+                    this.#minus = shadow.querySelector('.minus');
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Создадим геттер/сеттер для свойства <code>value</code>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                get value() {
+                    return Number(this.output.value);
+                }
+            
+                set value(newValue) {
+                    const value = Number(newValue);
+            
+                    this.output.value = value >= 0 ? value : 0;
+                    this.minus.disabled = value === 0;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Сможем работать с <code>value</code> как со свойством:</p>
+            </figcaption>
+            <code-block language="javascript">
+                myElement.value = 4;
+                console.log(myElement.value) // 4
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Реализуем методы для уменьшения/увеличения значения:</p>
+            </figcaption>
+            <code-block language="javascript">
+                decrease() {
+                    this.value -= 1;
+                }
+            
+                increase() {
+                    this.value += 1;
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Cоздадим обработчики кликов по кнопкам:</p>
+            </figcaption>
+            <code-block language="javascript">
+                connectedCallback() {
+                    // ...
+                    this.#plus.addEventListener('click', this.increase.bind(this));
+                    this.#minus.addEventListener('click', this.decrease.bind(this));
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Будем следить за изменениями атрибута <code>value</code>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                static get observedAttributes() {
+                    return ['value'];
+                }
+            
+                attributeChangedCallback(name, oldValue, newValue) {
+                    switch (name) {
+                        case 'value':
+                            this.value = newValue;
+                            break;
+                    }
+                }
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Логика</h2>
+        <figure>
+            <figcaption>
+                <p>Сможем реагировать на изменение атрибута <code>value</code>:</p>
+            </figcaption>
+            <code-block language="javascript">
+                myElement.setAttribute('value', 2);
+                console.log(myElement.getAttribute('value'));
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Quantity Input: Подключение</h2>
+        <figure>
+            <figcaption>
+                <p>Зарегистрируем элемент под именем <code>quantity-input</code> и добавим на страницу:</p>
+            </figcaption>
+            <code-block language="javascript">
+                customElements.define('quantity-input', QuantityInput);
+            </code-block>
+            <code-block language="html">
+                &lt;script type="module" src="quantity-input.js"&gt;&lt;/script&gt;
+
+                &lt;quantity-input value="4"&gt;&lt;/quantity-input&gt;
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Готово!</h2>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Что ещё?</h2>
+    </section>
+
+    <section class="slide">
+        <h2>Переиспользование</h2>
+        <code-block language="html">
+            &lt;script type="module" src="quantity-input.js"&gt;&lt;/script&gt;
+
+            &lt;quantity-input value="4"&gt;&lt;/quantity-input&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Контент</h2>
+        <code-block language="html">
+            &lt;quantity-input&gt;
+                &lt;p&gt;Количество:&lt;/p&gt;
+            &lt;/quantity-input&gt;
+        </code-block>
+        <code-block class="next" language="html">
+            ▼ &lt;quantity-input&gt;
+            │  ▼ #shadow-root (open)
+            │  │ ► &lt;style&gt;...&lt;/style&gt;
+            │  │   &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+            │  │   &lt;output class="output"&gt;0&lt;/output&gt;
+            │  │   &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+            │  &lt;p&gt;Количество&lt;/p&gt;
+            │ &lt;/quantity-input&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Контент</h2>
+        <code-block language="html">
+            &lt;quantity-input&gt;
+                &lt;p&gt;Количество:&lt;/p&gt;
+            &lt;/quantity-input&gt;
+        </code-block>
+        <quantity-input>
+            <p>Количество</p>
+        </quantity-input>
+    </section>
+
+    <section class="slide">
+        <h2>Создание слота</h2>
+        <figure>
+            <figcaption>
+                <p>Создаём заполнители для контента при помощи <code>&lt;slot&gt;</code></p>
+            </figcaption>
+        </figure>
+        <code-block language="javascript">
+            template() {
+                return `
+                    &lt;slot name="label"&gt;&lt;/slot&gt;
+                    &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+                    &lt;output class="output"&gt;0&lt;/output&gt;
+                    &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+                `;
+            }
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Отображение элемента в слоте</h2>
+        <code-block language="html">
+            &lt;quantity-input&gt;
+                &lt;p slot="label"&gt;Количество:&lt;/p&gt;
+            &lt;/quantity-input&gt;
+        </code-block>
+        <quantity-input>
+            <p slot="label">Количество:</p>
+        </quantity-input>
+    </section>
+
+    <section class="slide">
+        <h2>Подстановка в слоты</h2>
+        <code-block language="html">
+            ▼ &lt;quantity-input&gt;
+            │  ▼ #shadow-root (open)
+            │  │ ► &lt;style&gt;...&lt;/style&gt;
+            │  │ ▼ &lt;slot name="label"&gt;
+            │  │ │  → &lt;p&gt; reveal
+            │  │ │ &lt;/slot&gt;
+            │  │   &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+            │  │   &lt;output class="output"&gt;0&lt;/output&gt;
+            │  │   &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+            │  &lt;p&gt;Количество&lt;/p&gt;
+            │ &lt;/quantity-input&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Стилизация слотов</h2>
+        <code-block language="css">
+            ::slotted(p) {
+                width: 100%;
+                margin: 0 0 8px;
+                font-size: 22px;
+                font-style: italic;
+                text-align: center;
+            }
+        </code-block>
+        <quantity-input>
+            <p slot="label" class="styled">Количество</p>
+        </quantity-input>
+    </section>
+
+    <section class="slide">
+        <h2>Встроенные пользовательские элементы</h2>
+        <code-block language="javascript">
+            class MyButton extends HTMLButtonElement {
+                constructor() {
+                    super();
+                    this.addEventListener('click', () => { 
+                        this.style.backgroundColor = 'wheat' 
+                    });
+                }
+            }
+
+            customElements.define('my-button', MyButton, { extends: 'button' });
+        </code-block>
+        <code-block language="html">
+            &lt;script type="module" src="my-button.js"&gt;&lt;/script&gt;
+
+            &lt;button is="my-button"&gt;Нажми меня&lt;/button&gt;
+        </code-block>
+    </section>
+
+    <section class="slide">
+        <h2>Встроенные пользовательские элементы</h2>
+        <button is="my-button" class="place">Нажми меня</button>
+        <script>
+            class MyButton extends HTMLButtonElement {
+                constructor() {
+                    super();
+                    this.addEventListener('click', () => {
+                        this.style.backgroundColor = 'wheat';
+                    });
+                }
+            }
+
+            customElements.define('my-button', MyButton, { extends: 'button' });
+        </script>
+    </section>
+
+    <section class="slide">
+        <h2>Пользовательские элементы форм</h2>
+        <code-block language="javascript">
+            class MyCheckbox extends HTMLElement {
+                static formAssociated = true; // Ассоциировать с формой
+                constructor() {
+                    super();
+                    this.internals = this.attachInternals(); // Добавление методов форм
+                }
+                formAssociatedCallback(form) {} // Элемент ассоциирован с формой
+                formDisabledCallback(disabled) {} // Элемент или его родитель disabled
+                formResetCallback() {} // Сброс формы
+                formStateRestoreCallback(state, mode) {} // Восстановление или autocomplete
+                get validity() {return this.internals.validity; }
+                get validationMessage() {return this.internals.validationMessage; }
+                get willValidate() {return this.internals.willValidate; }
+                checkValidity() { return this.internals.checkValidity(); }
+                reportValidity() { return this.internals.reportValidity(); }
+            }
+        </code-block>
+        <a href="https://web.dev/more-capable-form-controls/" class="copyright" target="_blank" hreflang="en">More capable form controls</a>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Будущее</h2>
+    </section>
+
+    <section class="slide">
+        <h2>HTML Modules Proposal</h2>
+        <figure>
+            <code-block language="html">
+                &lt;!--  template.html --&gt;
+                &lt;template&gt;
+                    &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+                    &lt;output class="output"&gt;0&lt;/output&gt;
+                    &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+                &lt;/template&gt;
+            </code-block>
+            <code-block language="javascript">
+                // quantity-input.js
+                import html from 'template.html';
+
+                const template = html.querySelector('template').content;
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>CSS module scripts</h2>
+        <figure>
+            <code-block language="javascript">
+                // my-component.js
+                import styleSheet from "./styles.css" assert { type: "css" };
+
+                // Внутри класса компонента
+                class MyComponent extends HTMLElement {
+                    constructor() {
+                        super();
+                        this.adoptedStyleSheets = [ styleSheet ];
+                    }
+                }
+            </code-block>
+        </figure>
+        <p class="note">Доступно с Chrome 93</p>
+    </section>
+
+    <section class="slide">
+        <h2>Constructable Stylesheets</h2>
+        <figure>
+            <code-block language="javascript">
+                // Create our shared stylesheet:
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync('a { color: red; }');
+
+                // Apply the stylesheet to a document:
+                document.adoptedStyleSheets = [sheet];
+
+                // Apply the stylesheet to a Shadow Root:
+                const node = document.createElement('div');
+                const shadow = node.attachShadow({ mode: 'open' });
+                shadow.adoptedStyleSheets = [sheet];
+            </code-block>
+        </figure>
+    </section>
+
+    <section class="slide">
+        <h2>Декларативный Shadow DOM</h2>
+        <code-block language="html">
+            &lt;quantity-input&gt;
+                &lt;template shadowroot="open"&gt;
+                    &lt;slot name="label"&gt;&lt;/label&gt;
+                    &lt;button type="button" class="minus" aria-label="decrease"&gt;-&lt;/button&gt;
+                    &lt;output class="output"&gt;0&lt;/output&gt;
+                    &lt;button type="button" class="plus" aria-label="increase"&gt;+&lt;/button&gt;
+                &lt;/template&gt;
+                &lt;p slot="label"&gt;Количество:&lt;/label&gt;
+            &lt;/quantity-input&gt;
+        </code-block>
+        <a href="https://web.dev/declarative-shadow-dom/" class="copyright" target="_blank" hreflang="en">Declarative Shadow DOM</a>
+    </section>
+
+    <section class="slide">
+        <h2>И многое другое...</h2>
+        <ul>
+            <li><a href="https://github.com/WICG/webcomponents/blob/159b1600bab02fe9cd794825440a98537d53b389/proposals/Template-Instantiation.md" target="_blank" hreflang="en">HTML Template Instantiation</a></li>
+            <li><a href="https://github.com/webcomponents-cg/community-protocols/issues/30" target="_blank" hreflang="en">First Level hydration</a></li>
+            <li><a href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/pending-task.md" target="_blank" hreflang="en">Pending Task Protocol</a></li>
+            <li><a href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md" target="_blank" hreflang="en">Context Protocol</a></li>
+            <li><a href="https://github.com/WICG/webcomponents/issues/716" target="_blank" hreflang="en">Scoped Custom Element Definitions</a></li>
+            <li>...</li>
+        </ul>
+        <a href="https://w3c.github.io/webcomponents-cg//" class="copyright" target="_blank" hreflang="en">Web Components Community Group</a>
+    </section>
+
+    <section class="slide">
+        <h2 class="shout">Зачем?</h2>
+    </section>
+
+    <section class="slide">
+        <div class="columns two">
+            <div>
+                <h2>Плюсы</h2>
+                <ul>
+                    <li class="next">Встроено в браузеры</li>
+                    <li class="next">Стандартизировано</li>
+                    <li class="next">DOM API</li>
+                    <li class="next">Не зависит от фреймворков</li>
+                    <li class="next">Простое API</li>
+                </ul>
+            </div>
+            <div class="next">
+                <h2>Минусы</h2>
+                <ul>
+                    <li class="next">Небольшое API</li>
+                    <li class="next">Не все возможности реализованы и хорошо поддерживаются</li>
+                    <li class="next">Сложно делать большие приложения</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <h2>Где использовать?</h2>
+        <ul>
+            <li class="next">На небольших проектах для интерактивных виджетов</li>
+            <li class="next">На проектах, где не используются фреймворки (как альтернатива классическим подходам)</li>
+            <li class="next">Для создания библиотеки переиспользуемых компонентов</li>
+        </ul>
+    </section>
+
+    <section class="slide">
+        <h2>Кто использует?</h2>
+        <p>~18% страниц, отслеживаемых Google, содержат Web Component. Также их активно используют:</p>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 75px; justify-items: center;">
+            <img src="pictures/google.svg" alt="Google">
+            <img src="pictures/adobe.svg" alt="Adobe">
+            <img src="pictures/ibm.svg" alt="IBM">
+            <img src="pictures/microsoft.svg" alt="Microsoft">
+            <img src="pictures/github.svg" alt="GitHub">
+            <img src="pictures/shopify.svg" alt="Shopify">
+        </div>
+        <p>...и другие компании.</p>
+    </section>
+
+    <section class="slide">
+        <h2>Готовые библиотеки компонентов</h2>
+        <ul>
+            <li><a href="https://opensource.adobe.com/spectrum-web-components/" target="_blank" hreflang="en">Spectrum Web Components</a></li>
+            <li><a href="https://carbondesignsystem.com/developing/frameworks/web-components/" target="_blank" hreflang="en">Carbon Design System</a></li>
+            <li><a href="https://sap.github.io/ui5-webcomponents/" target="_blank" hreflang="en">UI5 Web Components</a></li>
+            <li><a href="https://shoelace.style/" target="_blank" hreflang="en">Shoelance</a></li>
+            <li>и тд...</li>
+        </ul>
+        <a href="https://www.webcomponents.org/collections" class="copyright" target="_blank" hreflang="en">Web Component collections</a>
+    </section>
+
+    <section class="slide">
+        <h2>Инструменты</h2>
+        <p>Библиотеки, которые упрощают/расширяют функционал Web components:</p>
+        <ul>
+            <li class="next"><del><a href="https://polymer-library.polymer-project.org/" target="_blank" hreflang="en">Polymer</a></del></li>
+            <li class="next"><a href="https://lit.dev/" target="_blank" hreflang="en">Lit</a></li>
+            <li class="next"><a href="https://stenciljs.com/" target="_blank" hreflang="en">Stencil</a></li>
+            <li class="next"><a href="https://vuejs.org/guide/extras/web-components.html" target="_blank" hreflang="en">Vue and Web Components</a></li>
+            <li class="next"><a href="https://reactjs.org/docs/web-components.html" target="_blank" hreflang="en">React and Web Components</a></li>
+        </ul>
+        <a href="https://webcomponents.dev/blog/all-the-ways-to-make-a-web-component/" class="copyright" target="_blank" hreflang="en">All the Ways to Make a Web Component</a>
+    </section>
+
+    <section class="slide">
+        <h2>Подробнее</h2>
+        <ul>
+            <li><a href="https://www.webcomponents.org/" target="_blank" hreflang="en">webcomponents.org</a></li>
+            <li><a href="https://webbooks.com.ua/download/?key=&count=2120&cat=12" target="_blank">Бен Фаррем - <cite>Веб-компоненты в действии</cite></a></li>
+            <li><a href="https://web.dev/web-components/" target="_blank" hreflang="en">Building components</a></li>
+            <li><a href="https://open-wc.org/" target="_blank" hreflang="en">Open Web Components</a></li>
+            <li><a href="https://github.com/nepaul/awesome-web-components" target="_blank" hreflang="en">Awesome Web Components</a></li>
+        </ul>
+    </section>
+
+    <section class="slide clear">
+        <h2 class="shout" style="text-align: left; color: white; padding-left: var(--slide-side);">Вопросы</h2>
+        <img src="pictures/questions.jpg" class="cover height" alt="Много знаков вопроса серого цвета и один красного цвета лежат на серой поверхности.">
+    </section>
+
+    <footer class="badge">
+        <a href="https://github.com/shower/shower">Fork me on GitHub</a>
+    </footer>
+
+    <div class="progress"></div>
+
+    <script src="shower/shower.js"></script>
+    <!-- Copyright © 3000 Yours Truly, Famous Inc. -->
+
+</body>
+</html>
